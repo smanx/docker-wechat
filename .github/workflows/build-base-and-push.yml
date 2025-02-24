@@ -31,10 +31,6 @@ jobs:
       - name: Login to DockerHub
         run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
-      # 构建Docker镜像（支持多平台）
-      - name: Build Docker image for multiple platforms
-        run: docker buildx build --platform linux/amd64,linux/arm64 -t $IMAGE_NAME . --push
-
-      # 推送Docker镜像到DockerHub（此步骤实际上在上面的构建命令中已经包含）
-      # - name: Push Docker image
-      #   run: docker push $IMAGE_NAME
+      # 构建Docker镜像（支持多平台）并推送到DockerHub
+      - name: Build and push Docker image for multiple platforms
+        run: docker buildx build --platform linux/amd64,linux/arm64  --file Dockerfile-base -t $IMAGE_NAME:base . --push
