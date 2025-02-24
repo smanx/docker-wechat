@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - master
+  workflow_dispatch:
 
 # 定义工作流中的作业
 jobs:
