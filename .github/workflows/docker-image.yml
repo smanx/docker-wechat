@@ -1,10 +1,8 @@
 name: docker-wechat CI
 on:
-  schedule:
-    - cron: '0 9 * * *'
   workflow_dispatch:
   push:
-    branches: [ "main" ]
+    branches: [ "main-test" ]
 
 jobs:
   build:
