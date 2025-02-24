@@ -2,9 +2,6 @@ name: Build and Push Multi-arch Docker Image
 
 # 定义触发条件，比如代码推送到main分支时触发
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 # 定义工作流中的作业
 jobs:
