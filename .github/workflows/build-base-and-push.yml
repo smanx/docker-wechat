@@ -30,4 +30,4 @@ jobs:
 
       # 构建Docker镜像（支持多平台）并推送到DockerHub
       - name: Build and push Docker image for multiple platforms
-        run: docker buildx build --platform linux/amd64,linux/arm64  --file Dockerfile-base -t $IMAGE_NAME:base . --push
+        run: docker buildx build --platform linux/amd64,linux/arm64 --file Dockerfile-base -t $IMAGE_NAME:base . --push
