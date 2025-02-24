@@ -1,4 +1,4 @@
-name: Build and Push Multi-arch Docker Image
+name: Build Wechat and Push Multi-arch Docker Image
 
 # 定义触发条件，比如代码推送到main分支时触发
 on:
