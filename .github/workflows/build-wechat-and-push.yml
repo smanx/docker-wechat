@@ -32,10 +32,7 @@ jobs:
       # 构建Docker镜像（支持多平台）并输出日志到指定文件
       - name: Build Docker image
         run: |
-          docker buildx build --platform linux/amd64,linux/arm64 \
-            -t $IMAGE_NAME \
-            . \
-            --load > build.log 2>&1
+          docker buildx build --platform linux/amd64,linux/arm64 -t $IMAGE_NAME . > build.log 2>&1
 
       # 从构建日志文件中提取版本号
       - name: Extract version number from build logs
