@@ -44,6 +44,8 @@ jobs:
             # 如果从 build.log 文件中提取失败，则使用年月日作为版本号
             VERSION=$(date +%Y%m%d)
           fi
+          # Trim leading and trailing whitespace
+          VERSION=$(echo $VERSION | xargs)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       # 给镜像打上版本标签
