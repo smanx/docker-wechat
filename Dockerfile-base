@@ -20,8 +20,9 @@ RUN apt update && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN if test -f /usr/lib/arm64-linux-gnu/libtiff.so; then \
-        ln -s /usr/lib/arm64-linux-gnu/libtiff.so /usr/lib/arm64-linux-gnu/libtiff.so.5; \
+RUN LIBTIFF_PATH=$(find /usr/lib -name "libtiff.so" | head -n 1) && \
+    if [ -n "$LIBTIFF_PATH" ]; then \
+        ln -s "$LIBTIFF_PATH" "${LIBTIFF_PATH%.so}.so.5"; \
     fi
 
 # 生成微信图标
