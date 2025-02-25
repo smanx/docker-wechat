@@ -10,7 +10,7 @@ jobs:
 
     # 设置环境变量
     env:
-      IMAGE_NAME: smanx/docker-wechat
+      IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/docker-wechat
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 

@@ -10,7 +10,7 @@ jobs:
 
     # 设置环境变量
     env:
-      IMAGE_NAME: smanx/docker-wechat
+      IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/docker-wechat
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
@@ -28,16 +28,11 @@ jobs:
       - name: Login to DockerHub
         run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
-      # 构建Docker镜像（支持多平台）并推送到DockerHub
-      - name: Build and push Docker image for multiple platforms
-        run: docker buildx build --platform linux/amd64,linux/arm64 --file Dockerfile-wechat -t $IMAGE_NAME . --push
-
-      # 为镜像打上年月日的标签并再次推送
-      - name: Tag and push Docker image with date
+      # 构建Docker镜像（支持多平台）并推送到DockerHub，同时打上日期标签
+      - name: Build and push Docker image with tags
         run: |
           DATE_TAG=$(date +'%Y%m%d')
-          docker buildx build --platform linux/amd64,linux/arm64 --file Dockerfile-wechat -t $IMAGE_NAME:$DATE_TAG . --push
-
-      # 推送Docker镜像到DockerHub（此步骤实际上在上面的构建命令中已经包含）
-      # - name: Push Docker image
-      #   run: docker push $IMAGE_NAME
+          docker buildx build --platform linux/amd64,linux/arm64 \
+            -t $IMAGE_NAME \
+            -t $IMAGE_NAME:$DATE_TAG \
+            . --push
