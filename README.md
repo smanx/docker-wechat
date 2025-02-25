@@ -1,5 +1,6 @@
 # docker-wechat
 在docker里运行wechat，可以通过web或者VNC访问wechat
+https://hub.docker.com/r/smanx/docker-wechat
 
 # 环境变量
 | 环境变量       | 描述                                  | 默认值 |
@@ -25,7 +26,7 @@
 ```
 services:
   wechat:
-    image: ricwang/docker-wechat:latest
+    image: smanx/docker-wechat:latest
     container_name: wechat_container
     volumes:
       - <THE PATH>/.xwechat:/root/.xwechat
@@ -60,7 +61,7 @@ docker run -d \
  -e WEB_AUDIO=1 \
  -e TZ=Asia/Shanghai \
  --privileged \
- ricwang/docker-wechat:latest
+ smanx/docker-wechat:latest
 ```
 
 # 演示：
