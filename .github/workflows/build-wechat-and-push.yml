@@ -47,6 +47,7 @@ jobs:
           # Trim leading and trailing whitespace
           VERSION=$(echo $VERSION | xargs)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "Extracted VERSION: $VERSION"  # 添加这一行来打印 VERSION 的值
 
       # 给镜像打上版本标签
       - name: Tag Docker image with version
