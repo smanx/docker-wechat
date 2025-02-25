@@ -3,7 +3,6 @@ name: Build Wechat and Push Multi-arch Docker Image
 # 定义触发条件，比如代码推送到main分支时触发
 on:
   workflow_dispatch:
-
 # 定义工作流中的作业
 jobs:
   build-and-push:
@@ -29,31 +28,12 @@ jobs:
       - name: Login to DockerHub
         run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
-      # 构建Docker镜像（支持多平台）并输出日志到指定文件
-      - name: Build Docker image
+      # 构建Docker镜像（支持多平台）并推送到DockerHub，同时打上日期标签
+      - name: Build and push Docker image with tags
         run: |
-          docker buildx build --platform linux/amd64,linux/arm64 --file Dockerfile-wechat -t $IMAGE_NAME:latest . 2>&1 | tee build.log
-          docker push $IMAGE_NAME:latest
-
-      # 从构建日志文件中提取版本号
-      - name: Extract version number from build logs
-        id: extract_version
-        run: |
-          # 尝试从 build.log 文件中提取版本号
-          VERSION=$(grep -m 1 -oP '(?<=Unpacking wechat \()[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' build.log)
-          if [ -z "$VERSION" ]; then
-            # 如果从 build.log 文件中提取失败，则使用年月日作为版本号
-            VERSION=$(date +%Y%m%d)
-          fi
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-
-      # 给镜像打上版本标签
-      - name: Tag Docker image with version
-        run: |
-          docker tag $IMAGE_NAME $IMAGE_NAME:${{ env.VERSION }}
-
-      # 推送镜像
-      - name: Push Docker image with tags
-        run: |
-          docker push $IMAGE_NAME
-          docker push $IMAGE_NAME:${{ env.VERSION }}
+          DATE_TAG=$(date +'%Y%m%d')
+          docker buildx build --platform linux/amd64,linux/arm64 \
+            --file Dockerfile-base \
+            -t $IMAGE_NAME \
+            -t $IMAGE_NAME:$DATE_TAG \
+            . --push
