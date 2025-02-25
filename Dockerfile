@@ -20,7 +20,9 @@ RUN apt update && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN ln -s /usr/lib/arm64-linux-gnu/libtiff.so /usr/lib/arm64-linux-gnu/libtiff.so.5
+RUN if test -f /usr/lib/arm64-linux-gnu/libtiff.so; then \
+        ln -s /usr/lib/arm64-linux-gnu/libtiff.so /usr/lib/arm64-linux-gnu/libtiff.so.5; \
+    fi
 
 # 生成微信图标
 RUN APP_ICON_URL=https://res.wx.qq.com/a/wx_fed/assets/res/NTI4MWU5.ico && \
