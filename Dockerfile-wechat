@@ -7,8 +7,11 @@ ENV WECHAT_HOME=/root/.xwechat \
 
 # 获取系统架构信息并安装微信
 RUN ARCH=$(uname -m) && \
-    PACKAGE_URL="https://dldir1v6.qq.com/weixin/Universal/Linux/WeChatLinux_${ARCH/x86_64/x86_64}.deb" && \
-    if [ "$ARCH" != "x86_64" ] && [ "$ARCH" != "aarch64" ]; then \
+    if [ "$ARCH" = "x86_64" ]; then \
+        PACKAGE_URL="https://dldir1v6.qq.com/weixin/Universal/Linux/WeChatLinux_x86_64.deb"; \
+    elif [ "$ARCH" = "aarch64" ]; then \
+        PACKAGE_URL="https://dldir1v6.qq.com/weixin/Universal/Linux/WeChatLinux_arm64.deb"; \
+    else \
         echo "Unsupported architecture: $ARCH" && exit 1; \
     fi && \
     # 下载并安装微信
