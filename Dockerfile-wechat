@@ -1,27 +1,37 @@
 FROM smanx/docker-wechat:base
 
-# 获取系统架构信息
-RUN ARCH=$(uname -m) && \
-    if [ "$ARCH" = "x86_64" ]; then \
-        PACKAGE_URL="https://dldir1v6.qq.com/weixin/Universal/Linux/WeChatLinux_x86_64.deb"; \
-    elif [ "$ARCH" = "aarch64" ]; then \
-        PACKAGE_URL="https://dldir1v6.qq.com/weixin/Universal/Linux/WeChatLinux_arm64.deb"; \
-    else \
+# 设置环境变量
+ENV WECHAT_HOME=/root/.xwechat \
+    WECHAT_FILES=/root/xwechat_files \
+    DOWNLOADS_DIR=/root/downloads
+
+# 获取系统架构信息并安装微信
+RUN set -ex && \
+    ARCH=$(uname -m) && \
+    PACKAGE_URL="https://dldir1v6.qq.com/weixin/Universal/Linux/WeChatLinux_${ARCH/x86_64/x86_64}.deb" && \
+    if [ "$ARCH" != "x86_64" ] && [ "$ARCH" != "aarch64" ]; then \
         echo "Unsupported architecture: $ARCH" && exit 1; \
     fi && \
-    # 下载微信安装包
-    curl -O "$PACKAGE_URL" && \
-    PACKAGE_NAME=$(basename "$PACKAGE_URL") && \
-    dpkg -i "$PACKAGE_NAME" 2>&1 | tee /tmp/wechat_install.log && \
-    rm "$PACKAGE_NAME"
+    # 下载并安装微信
+    curl -fsSL "$PACKAGE_URL" -o wechat.deb && \
+    dpkg -i wechat.deb 2>&1 | tee /tmp/wechat_install.log && \
+    APP_VERSION=$(grep -o 'Unpacking wechat ([0-9.]*)' /tmp/wechat_install.log | sed 's/Unpacking wechat (\(.*\))/\1/') && \
+    set-cont-env APP_VERSION "${APP_VERSION}" && \
+    # 清理安装文件
+    rm -f wechat.deb /tmp/wechat_install.log && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-RUN echo '#!/bin/sh' > /startapp.sh && \
-    echo 'exec /usr/bin/wechat' >> /startapp.sh && \
+# 创建启动脚本
+RUN echo '#!/bin/sh\n\
+mkdir -p "$WECHAT_HOME" "$WECHAT_FILES" "$DOWNLOADS_DIR"\n\
+exec /usr/bin/wechat' > /startapp.sh && \
     chmod +x /startapp.sh
 
-VOLUME /root/.xwechat
-VOLUME /root/xwechat_files
-VOLUME /root/downloads
+# 定义数据卷
+VOLUME ["$WECHAT_HOME", "$WECHAT_FILES", "$DOWNLOADS_DIR"]
 
-# 配置微信版本号
-RUN set-cont-env APP_VERSION "$(grep -o 'Unpacking wechat ([0-9.]*)' /tmp/wechat_install.log | sed 's/Unpacking wechat (\(.*\))/\1/')"
+# 设置健康检查
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+    CMD pgrep wechat || exit 1
+

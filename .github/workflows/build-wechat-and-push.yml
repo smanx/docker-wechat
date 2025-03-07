@@ -13,29 +13,69 @@ jobs:
     # 设置环境变量
     env:
       IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/docker-wechat
-      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
     # 定义作业中的步骤
     steps:
       # 检出代码
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       # 设置Docker构建环境
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3
 
       # 登录DockerHub
       - name: Login to DockerHub
-        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # 构建Docker镜像（支持多平台）并推送到DockerHub，同时打上日期标签
-      - name: Build and push Docker image with tags
+      # 构建临时开发版本用于版本检查
+      - name: Build dev image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile-wechat
+          platforms: linux/amd64
+          tags: ${{ env.IMAGE_NAME }}:dev
+          push: true
+
+      - name: Extract versions
+        id: version
         run: |
-          DATE_TAG=$(date +'%Y%m%d')
-          docker buildx build --platform linux/amd64,linux/arm64 \
-            --file Dockerfile-wechat \
-            -t $IMAGE_NAME:$DATE_TAG \
-            -t $IMAGE_NAME \
-            . --push
+          # 提取新版本号
+          NEW_VERSION=$(docker run --rm ${{ env.IMAGE_NAME }}:dev cat /etc/cont-env.d/APP_VERSION || echo "error")
+          if [ "$NEW_VERSION" = "error" ]; then
+            echo "Failed to extract new version"
+            exit 1
+          fi
+          echo "new_version=${NEW_VERSION}" >> $GITHUB_OUTPUT
+          
+          # 提取旧版本号
+          OLD_VERSION=$(docker pull ${{ env.IMAGE_NAME }}:latest >/dev/null 2>&1 && \
+            docker run --rm ${{ env.IMAGE_NAME }}:latest cat /etc/cont-env.d/APP_VERSION || echo "none")
+          echo "old_version=${OLD_VERSION}" >> $GITHUB_OUTPUT
+          
+          echo "New version: ${NEW_VERSION}"
+          echo "Old version: ${OLD_VERSION}"
+
+      - name: Build and push if version changed
+        if: steps.version.outputs.new_version != steps.version.outputs.old_version
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile-wechat
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:latest
+            ${{ env.IMAGE_NAME }}:${{ steps.version.outputs.new_version }}
+          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache,mode=max
+
+      - name: Cleanup
+        if: always()
+        run: |
+          docker image rm ${{ env.IMAGE_NAME }}:dev || true
+          docker image prune -f
