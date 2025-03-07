@@ -61,7 +61,7 @@ jobs:
           echo "Old version: ${OLD_VERSION}"
 
       - name: Build and push if version changed
-        if: steps.version.outputs.new_version != steps.version.outputs.old_version
+        # if: steps.version.outputs.new_version != steps.version.outputs.old_version
         uses: docker/build-push-action@v5
         with:
           context: .
