@@ -1,0 +1,39 @@
+name: Update Time
+
+on:
+  schedule:
+    - cron: '0 0 1 * *'  # 每月1号 00:00 UTC 触发
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  update_time:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Get Shanghai Time and Create/Update File
+        run: |
+          # 获取上海时间
+          SHANGHAI_TIME=$(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M:%S')
+          echo "Shanghai Time: $SHANGHAI_TIME"
+
+          # 文件名
+          FILE_NAME="time.txt"
+
+          # 创建或更新文件
+          echo "$SHANGHAI_TIME" > "$FILE_NAME"
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
+          git add time.txt
+          if git diff --staged --quiet; then
+            echo "No changes to commit."
+          else
+            SHANGHAI_TIME=$(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M:%S')
+            git commit -m "Update time.txt with Shanghai time: $SHANGHAI_TIME"
+            git remote set-url origin https://${{ github.actor }}:${{ secrets.MY_PAT }}@github.com/${{ github.repository }}
+            git push
+          fi
