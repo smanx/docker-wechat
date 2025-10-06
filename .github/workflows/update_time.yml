@@ -37,6 +37,5 @@ jobs:
           else
             SHANGHAI_TIME=$(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M:%S')
             git commit -m "Update time.txt with Shanghai time: $SHANGHAI_TIME"
-            # 使用 GITHUB_TOKEN 进行推送，不需要 MY_PAT
             git push
           fi
