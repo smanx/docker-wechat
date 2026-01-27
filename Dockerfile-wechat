@@ -15,7 +15,7 @@ RUN ARCH=$(uname -m) && \
         echo "Unsupported architecture: $ARCH" && exit 1; \
     fi && \
     # 下载并安装微信
-    curl -fsSL "$PACKAGE_URL" -o wechat.deb && \
+    curl -retry 3 --retry-delay 600 -fsSL "$PACKAGE_URL" -o wechat.deb && \
     dpkg -i wechat.deb 2>&1 | tee /tmp/wechat_install.log && \
     APP_VERSION=$(grep -o 'Unpacking wechat ([0-9.]*)' /tmp/wechat_install.log | sed 's/Unpacking wechat (\(.*\))/\1/') && \
     set-cont-env APP_VERSION "${APP_VERSION}" && \
